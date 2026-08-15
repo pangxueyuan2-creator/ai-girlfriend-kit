@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -185,9 +184,13 @@ class MemoryStore:
     @staticmethod
     def _normalize_key(content: str) -> str:
         s = content.strip().lower()
-        s = re.sub("[.,!?;:，。！？；：、\"'（）()\\[\\]{}<>《》·…—–-]+", "", s)
-        s = re.sub(r"\\s+", "", s)
-        s = s.replace("\u3000", "")
+        drop = set(
+            ". , ! ? ; : ， 。 ！ ？ ； ： 、 \" ' （ ） ( ) [ ] { } < > 《 》 · … — – -".replace(
+                " ", ""
+            )
+        )
+        s = "".join(ch for ch in s if ch not in drop)
+        s = "".join(ch for ch in s if not ch.isspace())
         return s
 
     def compact(self, drop_archived: bool = False) -> dict[str, int]:

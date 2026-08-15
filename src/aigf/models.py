@@ -50,7 +50,7 @@ class MemoryEntry:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "MemoryEntry":
+    def from_dict(cls, data: dict[str, Any]) -> MemoryEntry:
         return cls(
             id=str(data.get("id") or uuid.uuid4()),
             content=str(data.get("content") or "").strip(),
@@ -77,7 +77,7 @@ class Config:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Config":
+    def from_dict(cls, data: dict[str, Any]) -> Config:
         return cls(
             active_persona=str(data.get("active_persona") or "teasing-sister"),
             language=str(data.get("language") or "zh"),

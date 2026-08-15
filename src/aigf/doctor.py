@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from .paths import aigf_dir, config_path, memories_path, personas_dir
-
 
 SECRET_PATTERNS = [
     re.compile(r"sk-[A-Za-z0-9]{20,}"),
@@ -19,11 +17,17 @@ SECRET_PATTERNS = [
 def run_doctor() -> list[str]:
     lines: list[str] = []
     root_aigf = aigf_dir()
-    lines.append(f"Project .aigf dir : {root_aigf} ({'exists' if root_aigf.is_dir() else 'missing'})")
-    lines.append(f"Config            : {config_path()} ({'ok' if config_path().is_file() else 'missing'})")
-    lines.append(f"Memories file     : {memories_path()} ({'ok' if memories_path().is_file() else 'missing'})")
+    lines.append(
+        f"Project .aigf dir : {root_aigf} ({'exists' if root_aigf.is_dir() else 'missing'})"
+    )
+    lines.append(
+        f"Config            : {config_path()} ({'ok' if config_path().is_file() else 'missing'})"
+    )
+    lines.append(
+        f"Memories file     : {memories_path()} ({'ok' if memories_path().is_file() else 'missing'})"
+    )
     pdir = personas_dir()
-    count = len(list(pdir.glob('*.md'))) if pdir.is_dir() else 0
+    count = len(list(pdir.glob("*.md"))) if pdir.is_dir() else 0
     lines.append(f"Personas dir      : {pdir} ({count} personas)")
 
     mem = memories_path()

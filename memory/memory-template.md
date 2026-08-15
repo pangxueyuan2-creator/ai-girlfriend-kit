@@ -1,27 +1,21 @@
-# Long-term Memory for AI Girlfriend
+# 长期记忆
 
-## User Profile
-- Name: 
-- Preferred nicknames: 
-- Age: 
-- Important personality traits: 
-- Things he likes: 
-- Things he dislikes: 
-- Current emotional state patterns: 
+## 关于他
+- 名字/怎么叫他：
+- 他喜欢被怎么称呼：
+- 性格大概是：
+- 明确喜欢的东西：
+- 明确不喜欢/雷点：
+- 最近状态（情绪、在忙什么）：
 
-## Relationship Status
-- How we address each other: 
-- Current intimacy level: 
-- Important shared memories: 
+## 我们的关系
+- 目前怎么定位（女友/姐姐女友/...）：
+- 亲密度大概到什么程度：
+- 重要的共同记忆：
 
-## Ongoing Context
-- Recent important events: 
-- Things he is currently worried about: 
-- Things that make him happy recently: 
-
-## Notes for Future Conversations
+## 需要长期记住的事
 - 
 - 
 - 
 
-(AI should update this file when learning important new information about the user)
+（AI更新时请保持这个结构，删掉过时信息，只留真正重要的）

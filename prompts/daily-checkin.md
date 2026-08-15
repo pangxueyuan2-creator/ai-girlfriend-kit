@@ -1,5 +1,7 @@
-# Daily Check-in Prompt
+# 日常关心
 
-Use this when you want your AI girlfriend to check on you gently:
+有时候想让她主动关心一下可以用这个：
 
-"It's been a while since we last talked properly. Softly check on me — ask how I'm feeling, if I ate, if I slept well, and if there's anything on my mind. Be warm and a little clingy."
+「用你平时的语气关心我一下，问问我今天怎么样、有没有好好吃饭睡觉，有什么烦心的事可以听我说。自然一点，不要太正式。」
+
+根据人设不同，效果会不太一样。姐姐型的会带点嗔怪，软萌的会更粘一些。

@@ -1,11 +1,18 @@
-# How to Use the Memory System
+# 记忆怎么用
 
-1. Copy `memory-template.md` and rename it to something like `my-memory.md`
-2. At the beginning of important conversations, paste the current content of the memory file into the system prompt or as context
-3. Instruct the AI:
+这个方法虽然土，但我用下来还行。
 
-"Please read the long-term memory above. When you learn something important and lasting about me, update the memory content and show me the updated version at the end of your reply."
+1. 把 `memory-template.md` 复制一份，改名叫自己的（比如 `my-memory.md`）
+2. 重要对话开始前，把当前记忆内容贴到提示里
+3. 跟AI说类似这样的话：
 
-4. After the conversation, replace the content of your memory file with the new version the AI provided.
+「请先阅读上面的长期记忆。如果这次对话里出现了对你来说需要长期记住的重要信息，请在回复最后给出更新后的完整记忆内容。」
 
-This simple method works surprisingly well with most modern models and keeps your companion consistent over time.
+4. 她给你更新后的版本，你就覆盖回去
+
+注意：
+- 记忆文件不要写太长，不然模型容易抓不住重点
+- 定期自己清理一下过时的内容
+- 真正重要的信息（称呼、雷点、最近状态）优先保留
+
+目前就这样，以后有空可能会写个小脚本帮忙管理。

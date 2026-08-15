@@ -1,103 +1,78 @@
-# AI Girlfriend Kit 💕
+# AI Girlfriend Kit
 
-**Lightweight, local-first toolkit to build your own AI girlfriend.**
+自己搭AI女友用的一套东西。
 
-Includes ready-to-use personality templates, long-term memory system, bilingual prompts (English / 中文), and character cards. Designed for privacy — everything can run locally.
+我做这个主要是因为现成的角色卡要么太假，要么记忆全靠模型自己记，聊久了就崩。想自己控制性格和记忆，就慢慢整理成现在这样。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
----
-
-## ✨ Features
-
-- **Personality Templates** — Soft, clingy, teasing, mature sister, cold beauty, etc.
-- **Long-term Memory** — Simple file-based memory that actually persists across conversations
-- **Bilingual Support** — Full English + 中文 prompts and examples
-- **Character Cards** — Ready-to-import format for most frontend UIs
-- **Privacy First** — No cloud required, works with local models (Ollama, LM Studio, etc.)
-- **Easy to Customize** — Just edit markdown / JSON files
+目前能直接用，也方便改。
 
 ---
 
-## 🚀 Quick Start
+## 这个项目能干什么
 
-1. Clone this repo
-2. Pick a personality from `/personalities`
-3. Copy the system prompt into your preferred frontend (SillyTavern, OpenWebUI, Cursor, Claude, etc.)
-4. Use the memory template in `/memory` to keep conversation history
-5. Start chatting
+- 给AI女友一套比较稳的人设（目前有4个）
+- 用简单的文件方式做长期记忆，不依赖平台
+- 中文和英文提示都写了，看你习惯哪个
+- 可以直接丢进 SillyTavern、OpenWebUI、或者自己接本地模型
+
+没什么花里胡哨的，就是实用。
 
 ---
 
-## 📁 Project Structure
+## 目录说明
 
 ```
-ai-girlfriend-kit/
-├── personalities/          # Personality system prompts
-│   ├── soft-clingy.md
-│   ├── teasing-sister.md
-│   ├── mature-gentle.md
-│   └── cold-beauty.md
-├── memory/                 # Memory system
-│   ├── memory-template.md
-│   └── how-to-use-memory.md
-├── character-cards/        # Importable character cards
-│   └── example-cards/
-├── prompts/                # Extra useful prompts
-│   ├── daily-checkin.md
-│   └── emotional-support.md
-└── README.md
+personalities/     人设提示词
+memory/            记忆相关
+prompts/           一些额外提示
+我的使用笔记.md     我自己用的时候的一些想法
 ```
 
 ---
 
-## 💡 Recommended Personalities
+## 人设目前有这些
 
-| Name | Style | Best For |
-|------|-------|----------|
-| Soft Clingy | 软萌、粘人、会撒娇 | Daily companionship |
-| Teasing Sister | 会欺负你、又宠你的姐姐 | Playful & slightly dominant |
-| Mature Gentle | 温柔成熟、会哄人 | Emotional support |
-| Cold Beauty | 表面冷淡、内心在意 | Slow-burn tension |
+| 文件 | 风格 | 备注 |
+|------|------|------|
+| teasing-sister.md | 会调戏人的姐姐 | 我自己最常用这个 |
+| soft-clingy.md | 软萌粘人 | 适合想被哄的时候 |
+| mature-gentle.md | 成熟温柔 | 比较稳，情绪不好的时候用 |
+| cold-beauty.md | 表面冷淡 | 还在调，暂时没那么完善 |
 
-All personalities come in both **English** and **中文** versions.
-
----
-
-## 🧠 Memory System
-
-This kit uses a simple but effective long-term memory approach:
-
-- Important facts about the user are stored in a structured markdown file
-- The AI is instructed to read and update this file
-- Works surprisingly well with most modern models
-
-See `/memory/how-to-use-memory.md` for detailed instructions.
+人设都是中英双语的，直接复制对应部分就行。
 
 ---
 
-## 🛠️ Compatible With
+## 怎么用记忆
 
-- SillyTavern
-- OpenWebUI
-- LM Studio + any frontend
-- Ollama
-- Cursor / Claude Projects
-- Most custom agent frameworks
+看 `memory/how-to-use-memory.md`。
 
----
+简单说就是：
+1. 复制 memory-template.md
+2. 每次重要对话前把内容贴给AI
+3. 让它更新后把新版本发你
+4. 自己覆盖回去
 
-## ❤️ Philosophy
-
-This project is for people who want a **personal, private AI companion** without sending everything to the cloud.  
-Customize her personality, keep your own memories, and make her truly yours.
+虽然土，但比纯靠模型记靠谱多了。
 
 ---
 
-## License
+## 我自己的使用习惯
 
-MIT — free to use, modify, and share.
+我一般会把「会调戏的姐姐」当默认人设，然后根据当天心情切换。记忆文件我会定期手动整理一下，把太碎的东西删掉，只留真正重要的。
+
+如果你也想让她记得比较久，建议一开始就认真填一下用户信息那几项。
 
 ---
 
-Made with care. Enjoy your new companion.
+## 后续可能加的
+
+- 再补两个人设
+- 写一个简单的本地脚本帮着管理记忆文件（有空再说）
+- 针对不同前端的导入说明
+
+有问题或者想加什么直接提issue也行，反正是自己用着玩的。
+
+---
+
+MIT协议，随便用。

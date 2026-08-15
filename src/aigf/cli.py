@@ -11,7 +11,6 @@ from .config import load_config, save_config
 from .context import build_context
 from .doctor import run_doctor
 from .memory import MemoryStore
-from .models import VALID_CATEGORIES
 from .paths import aigf_dir, find_project_root, memories_path, personas_dir
 from .persona import get_persona_prompt, list_personas, load_persona
 

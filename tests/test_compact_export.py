@@ -58,8 +58,8 @@ def project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     aigf = tmp_path / ".aigf"
     aigf.mkdir()
     (aigf / "config.json").write_text(
-        '{"active_persona": "teasing-sister", "language": "zh",
-         "max_memories": 5, "max_chars": 4000}',
+        '{"active_persona": "teasing-sister", "language": "zh", '
+        '"max_memories": 5, "max_chars": 4000}',
         encoding="utf-8",
     )
     monkeypatch.chdir(tmp_path)
@@ -83,3 +83,25 @@ def test_export_plain_and_frontends(project: Path, tmp_path: Path) -> None:
     data2 = json.loads(ow.read_text(encoding="utf-8"))
     assert "system" in data2
     assert data2["meta"]["lang"] == "en"
+
+
+def test_compact_keeps_similar_but_different_memories(store: MemoryStore) -> None:
+    """Near-dup detection must not merge legitimately different facts."""
+    store.add("我喜欢被哄")
+    store.add("我喜欢被抱")
+    store.add("我不喜欢被冷暴力")
+    stats = store.compact()
+    assert stats["after"] == 3
+    contents = {e.content for e in store.list()}
+    assert contents == {"我喜欢被哄", "我喜欢被抱", "我不喜欢被冷暴力"}
+
+
+def test_export_json_is_valid(project: Path, tmp_path: Path) -> None:
+    store = MemoryStore(path=project / ".aigf" / "memories.jsonl")
+    store.add("valid-json-check", importance="high")
+    st = export_sillytavern(tmp_path / "st2.json")
+    ow = export_openwebui(tmp_path / "ow2.json")
+    data_st = json.loads(st.read_text(encoding="utf-8"))
+    data_ow = json.loads(ow.read_text(encoding="utf-8"))
+    assert isinstance(data_st, dict) and "system_prompt" in data_st
+    assert isinstance(data_ow, dict) and "system" in data_ow

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 
@@ -12,7 +11,7 @@ from .config import load_config, save_config
 from .context import build_context
 from .doctor import run_doctor
 from .memory import MemoryStore
-from .models import VALID_CATEGORIES, VALID_IMPORTANCE
+from .models import VALID_CATEGORIES
 from .paths import aigf_dir, find_project_root, memories_path, personas_dir
 from .persona import get_persona_prompt, list_personas, load_persona
 
@@ -25,11 +24,12 @@ app = typer.Typer(
 
 memory_app = typer.Typer(help="Manage long-term memories.")
 persona_app = typer.Typer(help="Manage personas.")
+context_app = typer.Typer(help="Build ready-to-paste context for your model.")
+export_app = typer.Typer(help="Export prompts for frontends.")
 app.add_typer(memory_app, name="memory")
 app.add_typer(persona_app, name="persona")
-
-context_app = typer.Typer(help="Build ready-to-paste context for your model.")
 app.add_typer(context_app, name="context")
+app.add_typer(export_app, name="export")
 
 
 @app.callback()
@@ -78,11 +78,11 @@ def doctor() -> None:
 @context_app.callback(invoke_without_command=True)
 def context_root(
     ctx: typer.Context,
-    persona: Optional[str] = typer.Option(None, "--persona", "-p", help="Persona name"),
-    lang: Optional[str] = typer.Option(None, "--lang", "-l", help="zh or en"),
-    max_memories: Optional[int] = typer.Option(None, "--max-memories", help="Max memories to include"),
-    max_chars: Optional[int] = typer.Option(None, "--max-chars", help="Soft character limit"),
-    notes: str = typer.Option("", "--notes", help="Extra notes to append"),
+    persona: str | None = typer.Option(None, "--persona", "-p", help="Persona name"),
+    lang: str | None = typer.Option(None, "--lang", "-l", help="zh or en"),
+    max_memories: int | None = typer.Option(None, "--max-memories"),
+    max_chars: int | None = typer.Option(None, "--max-chars"),
+    notes: str = typer.Option("", "--notes"),
 ) -> None:
     """Build a ready-to-paste context (same as `aigf context build`)."""
     if ctx.invoked_subcommand is not None:
@@ -99,11 +99,11 @@ def context_root(
 
 @context_app.command("build")
 def context_build(
-    persona: Optional[str] = typer.Option(None, "--persona", "-p", help="Persona name"),
-    lang: Optional[str] = typer.Option(None, "--lang", "-l", help="zh or en"),
-    max_memories: Optional[int] = typer.Option(None, "--max-memories", help="Max memories to include"),
-    max_chars: Optional[int] = typer.Option(None, "--max-chars", help="Soft character limit"),
-    notes: str = typer.Option("", "--notes", help="Extra notes to append"),
+    persona: str | None = typer.Option(None, "--persona", "-p"),
+    lang: str | None = typer.Option(None, "--lang", "-l"),
+    max_memories: int | None = typer.Option(None, "--max-memories"),
+    max_chars: int | None = typer.Option(None, "--max-chars"),
+    notes: str = typer.Option("", "--notes"),
 ) -> None:
     """Build a ready-to-paste context for your model / frontend."""
     text = build_context(
@@ -118,7 +118,7 @@ def context_build(
 
 @memory_app.command("add")
 def memory_add(
-    content: str = typer.Argument(..., help="Memory content"),
+    content: str = typer.Argument(...),
     category: str = typer.Option("other", "--category", "-c"),
     importance: str = typer.Option("medium", "--importance", "-i"),
     tag: list[str] = typer.Option([], "--tag", "-t"),
@@ -132,7 +132,7 @@ def memory_add(
 
 @memory_app.command("list")
 def memory_list(
-    category: Optional[str] = typer.Option(None, "--category", "-c"),
+    category: str | None = typer.Option(None, "--category", "-c"),
     all_: bool = typer.Option(False, "--all", help="Include archived"),
 ) -> None:
     """List memories (newest first)."""
@@ -170,12 +170,34 @@ def memory_remove(memory_id: str = typer.Argument(...)) -> None:
         raise typer.Exit(1)
 
 
+@memory_app.command("archive")
+def memory_archive(memory_id: str = typer.Argument(...)) -> None:
+    """Soft-delete: mark memory as archived."""
+    store = MemoryStore()
+    entry = store.archive(memory_id)
+    if entry is None:
+        typer.echo(f"Not found: {memory_id}", err=True)
+        raise typer.Exit(1)
+    typer.echo(f"Archived [{entry.id[:8]}]")
+
+
+@memory_app.command("unarchive")
+def memory_unarchive(memory_id: str = typer.Argument(...)) -> None:
+    """Restore an archived memory."""
+    store = MemoryStore()
+    entry = store.unarchive(memory_id)
+    if entry is None:
+        typer.echo(f"Not found: {memory_id}", err=True)
+        raise typer.Exit(1)
+    typer.echo(f"Unarchived [{entry.id[:8]}]")
+
+
 @memory_app.command("edit")
 def memory_edit(
     memory_id: str = typer.Argument(...),
-    content: Optional[str] = typer.Option(None, "--content"),
-    category: Optional[str] = typer.Option(None, "--category", "-c"),
-    importance: Optional[str] = typer.Option(None, "--importance", "-i"),
+    content: str | None = typer.Option(None, "--content"),
+    category: str | None = typer.Option(None, "--category", "-c"),
+    importance: str | None = typer.Option(None, "--importance", "-i"),
 ) -> None:
     """Edit an existing memory."""
     store = MemoryStore()
@@ -188,10 +210,12 @@ def memory_edit(
 
 
 @memory_app.command("compact")
-def memory_compact() -> None:
-    """Remove exact duplicate memories, keep the newest."""
+def memory_compact(
+    drop_archived: bool = typer.Option(False, "--drop-archived"),
+) -> None:
+    """Remove exact/near duplicates; optionally drop archived."""
     store = MemoryStore()
-    stats = store.compact()
+    stats = store.compact(drop_archived=drop_archived)
     typer.echo(f"Before: {stats['before']}  After: {stats['after']}  Removed: {stats['removed']}")
 
 
@@ -226,7 +250,7 @@ def persona_show(
         text = get_persona_prompt(name, lang=lang)
     except FileNotFoundError as e:
         typer.echo(str(e), err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     typer.echo(text)
 
 
@@ -252,6 +276,49 @@ def persona_export(
     persona_show(name, lang=lang)
 
 
+@export_app.command("prompt")
+def export_prompt(
+    dest: Path | None = typer.Option(None, "--out", "-o"),
+    persona: str | None = typer.Option(None, "--persona", "-p"),
+    lang: str = typer.Option("zh", "--lang", "-l"),
+    max_memories: int | None = typer.Option(None, "--max-memories"),
+) -> None:
+    """Export plain system prompt (same as context build)."""
+    from .export import export_plain
+
+    text_out = export_plain(dest=dest, persona=persona, lang=lang, max_memories=max_memories)
+    if dest is None:
+        typer.echo(text_out)
+    else:
+        typer.echo(f"Wrote {dest}")
+
+
+@export_app.command("sillytavern")
+def export_st(
+    dest: Path = typer.Argument(...),
+    persona: str | None = typer.Option(None, "--persona", "-p"),
+    lang: str = typer.Option("zh", "--lang", "-l"),
+) -> None:
+    """Export a minimal SillyTavern character card JSON."""
+    from .export import export_sillytavern
+
+    path = export_sillytavern(dest, persona=persona, lang=lang)
+    typer.echo(f"Wrote {path}")
+
+
+@export_app.command("openwebui")
+def export_owui(
+    dest: Path = typer.Argument(...),
+    persona: str | None = typer.Option(None, "--persona", "-p"),
+    lang: str = typer.Option("zh", "--lang", "-l"),
+) -> None:
+    """Export an OpenWebUI-style system prompt JSON."""
+    from .export import export_openwebui
+
+    path = export_openwebui(dest, persona=persona, lang=lang)
+    typer.echo(f"Wrote {path}")
+
+
 @app.command()
 def migrate(
     legacy: Path = typer.Argument(..., help="Path to old memory-template.md or similar"),
@@ -267,7 +334,7 @@ def migrate(
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        if line.endswith("：") or line.endswith(":"):
+        if line.endswith(("：", ":")):
             continue
         store.add(content=line, category="other", importance="medium", source="migrate")
         added += 1

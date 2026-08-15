@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Iterable
 
@@ -183,11 +184,12 @@ class MemoryStore:
 
     @staticmethod
     def _normalize_key(content: str) -> str:
-        import re
-
         s = content.strip().lower()
-        s = re.sub(r"[\\.,!?;:，。！？；：、\"'（）()\\[\\]{}<>《》·…—–-]+", "", s)
-        s = re.sub(r"[\\s\\u3000]+", "", s)
+        # drop punctuation (ASCII + common CJK)
+        s = re.sub("[.,!?;:，。！？；：、\"'（）()\\[\\]{}<>《》·…—–-]+", "", s)
+        # drop all whitespace
+        s = re.sub(r"\s+", "", s)
+        s = s.replace("\u3000", "")
         return s
 
     def compact(self, drop_archived: bool = False) -> dict[str, int]:

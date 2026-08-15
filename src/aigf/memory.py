@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Iterable
 
-from .models import MemoryEntry, VALID_CATEGORIES, VALID_IMPORTANCE, _now_iso
+from .models import VALID_CATEGORIES, VALID_IMPORTANCE, MemoryEntry, _now_iso
 from .paths import memories_path
 
 
@@ -153,25 +153,66 @@ class MemoryStore:
         entries.sort(key=sort_key)
         return entries[: max(0, max_count)]
 
-    def compact(self) -> dict[str, int]:
+    def archive(self, memory_id: str) -> MemoryEntry | None:
         entries = self._load_all()
-        seen: dict[str, MemoryEntry] = {}
-        removed = 0
+        target = None
+        for e in entries:
+            if e.id == memory_id or e.id.startswith(memory_id):
+                target = e
+                break
+        if target is None:
+            return None
+        target.archived = True
+        target.updated_at = _now_iso()
+        self._save_all(entries)
+        return target
+
+    def unarchive(self, memory_id: str) -> MemoryEntry | None:
+        entries = self._load_all()
+        target = None
+        for e in entries:
+            if e.id == memory_id or e.id.startswith(memory_id):
+                target = e
+                break
+        if target is None:
+            return None
+        target.archived = False
+        target.updated_at = _now_iso()
+        self._save_all(entries)
+        return target
+
+    @staticmethod
+    def _normalize_key(content: str) -> str:
+        import re
+
+        s = content.strip().lower()
+        s = re.sub(r"[\\.,!?;:，。！？；：、\"'（）()\\[\\]{}<>《》·…—–-]+", "", s)
+        s = re.sub(r"[\\s\\u3000]+", "", s)
+        return s
+
+    def compact(self, drop_archived: bool = False) -> dict[str, int]:
+        entries = self._load_all()
+        before = len(entries)
+        if drop_archived:
+            entries = [e for e in entries if not e.archived]
+        exact: dict[str, MemoryEntry] = {}
         for e in entries:
             key = e.content.strip().lower()
             if not key:
-                removed += 1
                 continue
-            if key in seen:
-                if e.updated_at > seen[key].updated_at:
-                    seen[key] = e
-                removed += 1
-            else:
-                seen[key] = e
-        unique = list(seen.values())
+            if key not in exact or e.updated_at > exact[key].updated_at:
+                exact[key] = e
+        normalized: dict[str, MemoryEntry] = {}
+        for e in exact.values():
+            nkey = self._normalize_key(e.content)
+            if not nkey:
+                continue
+            if nkey not in normalized or e.updated_at > normalized[nkey].updated_at:
+                normalized[nkey] = e
+        unique = list(normalized.values())
         unique.sort(key=lambda e: e.updated_at, reverse=True)
         self._save_all(unique)
-        return {"before": len(entries), "after": len(unique), "removed": removed}
+        return {"before": before, "after": len(unique), "removed": before - len(unique)}
 
     def export_jsonl(self, dest: Path) -> int:
         entries = self.list(include_archived=True)
@@ -187,5 +228,5 @@ def _ts(iso: str) -> float:
         from datetime import datetime
 
         return datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
-    except Exception:
+    except (ValueError, TypeError, OSError):
         return 0.0

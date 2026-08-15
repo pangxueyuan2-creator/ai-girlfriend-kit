@@ -1,78 +1,113 @@
 # AI Girlfriend Kit
 
-自己搭AI女友用的一套东西。
+一个本地管理 AI 伴侣人格和长期记忆的小工具。
 
 我做这个主要是因为现成的角色卡要么太假，要么记忆全靠模型自己记，聊久了就崩。想自己控制性格和记忆，就慢慢整理成现在这样。
 
-目前能直接用，也方便改。
+现在有了真正的 CLI，可以结构化地管记忆，并一键生成可直接复制给模型的 context。
+
+仍然是 local-first、不上传、不绑定任何模型供应商。
 
 ---
 
-## 这个项目能干什么
+## 60 秒上手
 
-- 给AI女友一套比较稳的人设（目前有4个）
-- 用简单的文件方式做长期记忆，不依赖平台
-- 中文和英文提示都写了，看你习惯哪个
-- 可以直接丢进 SillyTavern、OpenWebUI、或者自己接本地模型
+```bash
+pip install .
 
-没什么花里胡哨的，就是实用。
+aigf init
+aigf persona list
+aigf persona set teasing-sister
 
----
+aigf memory add "我不喜欢被冷暴力" --category preference --importance high
+aigf memory add "我喜欢别人主动哄我" --category relationship --importance high
 
-## 目录说明
-
-```
-personalities/     人设提示词
-memory/            记忆相关
-prompts/           一些额外提示
-我的使用笔记.md     我自己用的时候的一些想法
+aigf context build
 ```
 
+把输出的整段 context 复制到你正在用的前端 / 本地模型 / API 对话里即可。
+
 ---
 
-## 人设目前有这些
+## 它实际做什么
 
-| 文件 | 风格 | 备注 |
+- **人格（persona）**：继续用人类可读的 markdown，中英双语
+- **长期记忆（memory）**：结构化 JSONL，可增删改搜、去重、归档
+- **Context 构建**：根据当前人格 + 选中的记忆，生成稳定、可预测的提示文本
+- **Export**：plain prompt / SillyTavern card / OpenWebUI JSON
+- **不调用任何 LLM**：选择记忆、生成 context 都是本地确定性逻辑
+
+---
+
+## 常用命令
+
+```text
+aigf init
+aigf doctor
+aigf version
+
+aigf persona list
+aigf persona set <name>
+aigf persona show <name>
+
+aigf memory add "内容" --category preference --importance high
+aigf memory list
+aigf memory search 关键词
+aigf memory remove <id前缀>
+aigf memory archive <id前缀>
+aigf memory compact
+aigf memory compact --drop-archived
+aigf memory export backup.jsonl
+
+aigf context build
+aigf context build --lang en --max-memories 8
+
+aigf export prompt
+aigf export sillytavern card.json
+aigf export openwebui ow.json
+```
+
+记忆分类：`user_profile` / `preference` / `relationship` / `event` / `boundary` / `ongoing_topic` / `favorite` / `other`
+
+---
+
+## 人设
+
+| 名称 | 风格 | 备注 |
 |------|------|------|
-| teasing-sister.md | 会调戏人的姐姐 | 我自己最常用这个 |
-| soft-clingy.md | 软萌粘人 | 适合想被哄的时候 |
-| mature-gentle.md | 成熟温柔 | 比较稳，情绪不好的时候用 |
-| cold-beauty.md | 表面冷淡 | 还在调，暂时没那么完善 |
+| teasing-sister | 会调戏人的姐姐 | 我自己最常用 |
+| soft-clingy | 软萌粘人 | 想被哄的时候 |
+| mature-gentle | 成熟温柔 | 情绪不好时 |
+| cold-beauty | 表面冷淡 | 还在调 |
 
-人设都是中英双语的，直接复制对应部分就行。
-
----
-
-## 怎么用记忆
-
-看 `memory/how-to-use-memory.md`。
-
-简单说就是：
-1. 复制 memory-template.md
-2. 每次重要对话前把内容贴给AI
-3. 让它更新后把新版本发你
-4. 自己覆盖回去
-
-虽然土，但比纯靠模型记靠谱多了。
+人设文件仍在 `personalities/`，直接改 markdown 就行。
 
 ---
 
-## 我自己的使用习惯
+## 隐私
 
-我一般会把「会调戏的姐姐」当默认人设，然后根据当天心情切换。记忆文件我会定期手动整理一下，把太碎的东西删掉，只留真正重要的。
-
-如果你也想让她记得比较久，建议一开始就认真填一下用户信息那几项。
-
----
-
-## 后续可能加的
-
-- 再补两个人设
-- 写一个简单的本地脚本帮着管理记忆文件（有空再说）
-- 针对不同前端的导入说明
-
-有问题或者想加什么直接提issue也行，反正是自己用着玩的。
+- 记忆默认在 `.aigf/memories.jsonl`
+- 不上传、无 telemetry、无远程同步
+- `aigf doctor` 会简单扫描明显的 API key 形态
 
 ---
 
-MIT协议，随便用。
+## 开发 / 测试
+
+```bash
+pip install -e .
+pip install pytest ruff
+pytest -q
+ruff check src tests
+```
+
+CI 覆盖 Python 3.10–3.13。
+
+---
+
+## 状态
+
+早期 v0.1。单人维护。  
+目标是好用、可改、本地可控，不是做一个大而全的陪伴平台。
+
+MIT。

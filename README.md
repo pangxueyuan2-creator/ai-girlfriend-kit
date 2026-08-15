@@ -32,8 +32,9 @@ aigf context build
 ## 它实际做什么
 
 - **人格（persona）**：继续用人类可读的 markdown，中英双语
-- **长期记忆（memory）**：结构化 JSONL，可增删改搜、去重
+- **长期记忆（memory）**：结构化 JSONL，可增删改搜、去重、归档
 - **Context 构建**：根据当前人格 + 选中的记忆，生成稳定、可预测的提示文本
+- **Export**：plain prompt / SillyTavern card / OpenWebUI JSON
 - **不调用任何 LLM**：选择记忆、生成 context 都是本地确定性逻辑
 
 ---
@@ -43,6 +44,7 @@ aigf context build
 ```text
 aigf init
 aigf doctor
+aigf version
 
 aigf persona list
 aigf persona set <name>
@@ -52,16 +54,20 @@ aigf memory add "内容" --category preference --importance high
 aigf memory list
 aigf memory search 关键词
 aigf memory remove <id前缀>
+aigf memory archive <id前缀>
 aigf memory compact
+aigf memory compact --drop-archived
 aigf memory export backup.jsonl
 
 aigf context build
 aigf context build --lang en --max-memories 8
+
+aigf export prompt
+aigf export sillytavern card.json
+aigf export openwebui ow.json
 ```
 
-记忆分类目前支持：
-
-`user_profile` / `preference` / `relationship` / `event` / `boundary` / `ongoing_topic` / `favorite` / `other`
+记忆分类：`user_profile` / `preference` / `relationship` / `event` / `boundary` / `ongoing_topic` / `favorite` / `other`
 
 ---
 
@@ -74,26 +80,15 @@ aigf context build --lang en --max-memories 8
 | mature-gentle | 成熟温柔 | 情绪不好时 |
 | cold-beauty | 表面冷淡 | 还在调 |
 
-人设文件仍在 `personalities/`，直接改 markdown 就行，程序会读。
+人设文件仍在 `personalities/`，直接改 markdown 就行。
 
 ---
 
 ## 隐私
 
-- 记忆文件默认在项目下的 `.aigf/memories.jsonl`
-- 工具本身不上传、不做 telemetry、不远程同步
-- 记忆可能包含高度私密信息，请自行决定是否把 `.aigf/` 放进公开仓库
+- 记忆默认在 `.aigf/memories.jsonl`
+- 不上传、无 telemetry、无远程同步
 - `aigf doctor` 会简单扫描明显的 API key 形态
-
----
-
-## 从旧版迁移
-
-如果你之前用的是 `memory/memory-template.md`：
-
-```bash
-aigf migrate memory/memory-template.md
-```
 
 ---
 
@@ -101,9 +96,12 @@ aigf migrate memory/memory-template.md
 
 ```bash
 pip install -e .
-pip install pytest
+pip install pytest ruff
 pytest -q
+ruff check src tests
 ```
+
+CI 覆盖 Python 3.10–3.13。
 
 ---
 

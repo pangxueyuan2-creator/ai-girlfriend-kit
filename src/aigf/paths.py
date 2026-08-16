@@ -28,8 +28,15 @@ def memories_path(root: Path | None = None) -> Path:
 
 
 def personas_dir(root: Path | None = None) -> Path:
+    """Project-local personalities/ wins; bundled package templates are the fallback."""
     root = root or find_project_root()
     local = root / "personalities"
     if local.is_dir():
         return local
-    return local
+    bundled = bundled_personas_dir()
+    return bundled if bundled.is_dir() else local
+
+
+def bundled_personas_dir() -> Path:
+    """Templates shipped inside the installed package."""
+    return Path(__file__).resolve().parent / "personalities"

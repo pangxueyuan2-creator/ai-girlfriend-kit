@@ -80,7 +80,7 @@ aigf export openwebui ow.json
 | mature-gentle | 成熟温柔 | 情绪不好时 |
 | cold-beauty | 表面冷淡 | 还在调 |
 
-人设文件仍在 `personalities/`，直接改 markdown 就行。
+人设模板随包发布，`aigf init` 会复制到项目里的 `personalities/`，直接改 markdown 就行。没初始化也能用：`persona list` 会回退到内置模板。
 
 ---
 

@@ -50,6 +50,17 @@ def load_persona(name: str, root: Path | None = None) -> Persona | None:
     return Persona(name=path.stem, path=path, body=text, language_sections=sections)
 
 
+_FALLBACK_PERSONA = {
+    "zh": "你是一个温暖、体贴的 AI 伴侣。你自然地聊天，关心对方的情绪，回应具体而真诚，不夸张、不敷衍。",
+    "en": "You are a warm, attentive AI companion. You chat naturally, care about the other person\u2019s feelings, and reply concretely and sincerely, without exaggeration or deflection.",
+}
+
+
+def get_fallback_persona(lang: str = "zh") -> str:
+    """Neutral companion prompt used when no persona is configured or found."""
+    return _FALLBACK_PERSONA.get(lang, _FALLBACK_PERSONA["zh"])
+
+
 def get_persona_prompt(name: str, lang: str = "zh", root: Path | None = None) -> str:
     persona = load_persona(name, root)
     if not persona:

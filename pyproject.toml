@@ -39,7 +39,7 @@ Issues = "https://github.com/pangxueyuan2-creator/ai-girlfriend-kit/issues"
 where = ["src"]
 
 [tool.setuptools.package-data]
-aigf = ["py.typed"]
+aigf = ["py.typed", "personalities/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -11,7 +11,7 @@ from .config import load_config, save_config
 from .context import build_context
 from .doctor import run_doctor
 from .memory import MemoryStore
-from .paths import aigf_dir, find_project_root, memories_path, personas_dir
+from .paths import aigf_dir, bundled_personas_dir, find_project_root, memories_path, personas_dir
 from .persona import get_persona_prompt, list_personas, load_persona
 
 app = typer.Typer(
@@ -62,8 +62,22 @@ def init(
     mem = memories_path(root)
     if not mem.exists():
         mem.touch()
+
+    # Seed the bundled persona templates so `persona set` works right away and
+    # users can edit them as plain markdown in their own project.
+    local_personas = root / "personalities"
+    bundled = bundled_personas_dir()
+    seeded = 0
+    if bundled.is_dir():
+        local_personas.mkdir(parents=True, exist_ok=True)
+        for template in sorted(bundled.glob("*.md")):
+            destination = local_personas / template.name
+            if not destination.exists():
+                destination.write_text(template.read_text(encoding="utf-8"), encoding="utf-8")
+                seeded += 1
     typer.echo(f"Initialized: {d}")
     typer.echo(f"Memories   : {mem}")
+    typer.echo(f"Personas   : {local_personas} (seeded {seeded} template(s))")
     typer.echo("Next: aigf persona list  →  aigf persona set <name>  →  aigf memory add ...")
 
 

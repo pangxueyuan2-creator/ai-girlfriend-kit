@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .config import load_config
 from .memory import MemoryStore
-from .persona import get_persona_prompt
+from .persona import get_fallback_persona, get_persona_prompt
 
 
 def build_context(
@@ -20,7 +20,13 @@ def build_context(
     max_mem = max_memories if max_memories is not None else cfg.max_memories
     max_c = max_chars if max_chars is not None else cfg.max_chars
 
-    persona_text = get_persona_prompt(persona_name, lang=language)
+    if persona_name:
+        try:
+            persona_text = get_persona_prompt(persona_name, lang=language)
+        except FileNotFoundError:
+            persona_text = get_fallback_persona(language)
+    else:
+        persona_text = get_fallback_persona(language)
 
     store = MemoryStore()
     selected = store.select(max_count=max_mem)

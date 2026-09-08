@@ -53,6 +53,24 @@ def test_remove_by_prefix(store: MemoryStore) -> None:
     assert store.list() == []
 
 
+def test_ambiguous_prefix_does_not_remove_multiple_memories(store: MemoryStore) -> None:
+    store.add("第一条")
+    store.add("第二条")
+    entries = store._load_all()
+    entries[0].id = "abcdef1111111111"
+    entries[1].id = "abcdef2222222222"
+    store._save_all(entries)
+
+    assert store.get("abcdef") is None
+    assert store.remove("abcdef") is False
+    assert {entry.id for entry in store.list()} == {
+        "abcdef1111111111",
+        "abcdef2222222222",
+    }
+    assert store.remove("abcdef1111111111") is True
+    assert [entry.id for entry in store.list()] == ["abcdef2222222222"]
+
+
 def test_select_prefers_high_importance(store: MemoryStore) -> None:
     store.add("低优先级", importance="low")
     store.add("高优先级", importance="high")

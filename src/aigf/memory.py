@@ -40,6 +40,16 @@ class MemoryStore:
             for e in entries:
                 f.write(json.dumps(e.to_dict(), ensure_ascii=False) + "\n")
 
+    @staticmethod
+    def _resolve_id(entries: Iterable[MemoryEntry], memory_id: str) -> MemoryEntry | None:
+        """Resolve an exact ID or a unique prefix without guessing on ambiguity."""
+        items = list(entries)
+        for entry in items:
+            if entry.id == memory_id:
+                return entry
+        matches = [entry for entry in items if entry.id.startswith(memory_id)]
+        return matches[0] if len(matches) == 1 else None
+
     def add(
         self,
         content: str,
@@ -76,23 +86,15 @@ class MemoryStore:
         return entries
 
     def get(self, memory_id: str) -> MemoryEntry | None:
-        for e in self._load_all():
-            if e.id == memory_id or e.id.startswith(memory_id):
-                return e
-        return None
+        return self._resolve_id(self._load_all(), memory_id)
 
     def remove(self, memory_id: str) -> bool:
         entries = self._load_all()
-        new_entries = []
-        removed = False
-        for e in entries:
-            if e.id == memory_id or e.id.startswith(memory_id):
-                removed = True
-                continue
-            new_entries.append(e)
-        if removed:
-            self._save_all(new_entries)
-        return removed
+        target = self._resolve_id(entries, memory_id)
+        if target is None:
+            return False
+        self._save_all(e for e in entries if e.id != target.id)
+        return True
 
     def edit(
         self,
@@ -103,11 +105,7 @@ class MemoryStore:
         tags: list[str] | None = None,
     ) -> MemoryEntry | None:
         entries = self._load_all()
-        target = None
-        for e in entries:
-            if e.id == memory_id or e.id.startswith(memory_id):
-                target = e
-                break
+        target = self._resolve_id(entries, memory_id)
         if target is None:
             return None
         if content is not None:
@@ -155,11 +153,7 @@ class MemoryStore:
 
     def archive(self, memory_id: str) -> MemoryEntry | None:
         entries = self._load_all()
-        target = None
-        for e in entries:
-            if e.id == memory_id or e.id.startswith(memory_id):
-                target = e
-                break
+        target = self._resolve_id(entries, memory_id)
         if target is None:
             return None
         target.archived = True
@@ -169,11 +163,7 @@ class MemoryStore:
 
     def unarchive(self, memory_id: str) -> MemoryEntry | None:
         entries = self._load_all()
-        target = None
-        for e in entries:
-            if e.id == memory_id or e.id.startswith(memory_id):
-                target = e
-                break
+        target = self._resolve_id(entries, memory_id)
         if target is None:
             return None
         target.archived = False

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import aigf.memory as memory_module
 from aigf.memory import MemoryStore
 
 
@@ -94,6 +95,33 @@ def test_empty_edit_rejected_without_losing_memory(store: MemoryStore) -> None:
     saved = store.get(entry.id)
     assert saved is not None
     assert saved.content == "保留这条记忆"
+
+
+def test_rewrite_failure_preserves_original_file(
+    store: MemoryStore,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store.add("第一条")
+    store.add("第二条")
+    original = store.path.read_text(encoding="utf-8")
+    entries = store._load_all()
+    real_dumps = memory_module.json.dumps
+    calls = 0
+
+    def flaky_dumps(*args: object, **kwargs: object) -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("simulated serialization failure")
+        return real_dumps(*args, **kwargs)
+
+    monkeypatch.setattr(memory_module.json, "dumps", flaky_dumps)
+
+    with pytest.raises(RuntimeError, match="simulated serialization failure"):
+        store._save_all(entries)
+
+    assert store.path.read_text(encoding="utf-8") == original
+    assert list(store.path.parent.glob(f".{store.path.name}.*.tmp")) == []
 
 
 def test_malformed_lines_ignored(tmp_path: Path) -> None:

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -36,9 +38,25 @@ class MemoryStore:
         return entries
 
     def _save_all(self, entries: Iterable[MemoryEntry]) -> None:
-        with self.path.open("w", encoding="utf-8") as f:
-            for e in entries:
-                f.write(json.dumps(e.to_dict(), ensure_ascii=False) + "\n")
+        tmp_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self.path.parent,
+                prefix=f".{self.path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as f:
+                tmp_path = Path(f.name)
+                for e in entries:
+                    f.write(json.dumps(e.to_dict(), ensure_ascii=False) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, self.path)
+        finally:
+            if tmp_path is not None and tmp_path.exists():
+                tmp_path.unlink()
 
     @staticmethod
     def _resolve_id(entries: Iterable[MemoryEntry], memory_id: str) -> MemoryEntry | None:

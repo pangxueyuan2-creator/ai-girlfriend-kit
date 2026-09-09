@@ -98,7 +98,8 @@ def test_empty_edit_rejected_without_losing_memory(store: MemoryStore) -> None:
 
 
 def test_rewrite_failure_preserves_original_file(
-    store: MemoryStore, monkeypatch: pytest.MonkeyPatch
+    store: MemoryStore,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     store.add("第一条")
     store.add("第二条")

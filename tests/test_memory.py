@@ -85,6 +85,17 @@ def test_empty_content_rejected(store: MemoryStore) -> None:
         store.add("   ")
 
 
+def test_empty_edit_rejected_without_losing_memory(store: MemoryStore) -> None:
+    entry = store.add("保留这条记忆", category="preference")
+
+    with pytest.raises(ValueError):
+        store.edit(entry.id, content="   ")
+
+    saved = store.get(entry.id)
+    assert saved is not None
+    assert saved.content == "保留这条记忆"
+
+
 def test_malformed_lines_ignored(tmp_path: Path) -> None:
     path = tmp_path / "memories.jsonl"
     path.write_text(

@@ -109,7 +109,10 @@ class MemoryStore:
         if target is None:
             return None
         if content is not None:
-            target.content = content.strip()
+            content = content.strip()
+            if not content:
+                raise ValueError("Memory content cannot be empty")
+            target.content = content
         if category is not None and category in VALID_CATEGORIES:
             target.category = category
         if importance is not None and importance in VALID_IMPORTANCE:

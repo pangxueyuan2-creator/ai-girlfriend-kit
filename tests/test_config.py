@@ -23,7 +23,8 @@ def test_load_config_falls_back_for_non_object_json(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("value", ["not-a-number", {}, []])
 def test_load_config_falls_back_for_invalid_numeric_values(
-    tmp_path: Path, value: object
+    tmp_path: Path,
+    value: object,
 ) -> None:
     _write_config(tmp_path, {"max_memories": value})
 

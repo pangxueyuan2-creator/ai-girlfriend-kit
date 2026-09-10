@@ -17,7 +17,17 @@ class MemoryStore:
         self.path = path or memories_path()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if not self.path.exists():
-            self.path.touch()
+            self.path.touch(mode=0o600)
+        self._restrict_permissions()
+
+    def _restrict_permissions(self) -> None:
+        """Keep stored memories private to the current user on POSIX systems."""
+        if os.name != "posix":
+            return
+        mode = self.path.stat().st_mode & 0o777
+        private_mode = mode & ~0o077
+        if private_mode != mode:
+            self.path.chmod(private_mode)
 
     def _load_all(self) -> list[MemoryEntry]:
         entries: list[MemoryEntry] = []
@@ -54,6 +64,7 @@ class MemoryStore:
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(tmp_path, self.path)
+            self._restrict_permissions()
         finally:
             if tmp_path is not None and tmp_path.exists():
                 tmp_path.unlink()

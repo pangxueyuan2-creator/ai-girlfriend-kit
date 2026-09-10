@@ -15,8 +15,10 @@ def load_config(root: Path | None = None) -> Config:
         return Config()
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return Config()
         return Config.from_dict(data)
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError, TypeError, ValueError, OverflowError):
         return Config()
 
 

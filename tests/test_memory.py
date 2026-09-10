@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,20 @@ from aigf.memory import MemoryStore
 @pytest.fixture()
 def store(tmp_path: Path) -> MemoryStore:
     return MemoryStore(path=tmp_path / "memories.jsonl")
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX file modes are not portable to Windows")
+def test_memory_file_permissions_are_owner_only(tmp_path: Path) -> None:
+    path = tmp_path / "memories.jsonl"
+    path.touch(mode=0o666)
+    path.chmod(0o666)
+
+    store = MemoryStore(path=path)
+    assert path.stat().st_mode & 0o777 == 0o600
+
+    entry = store.add("private memory")
+    store.edit(entry.id, content="still private")
+    assert path.stat().st_mode & 0o777 == 0o600
 
 
 def test_add_and_list(store: MemoryStore) -> None:

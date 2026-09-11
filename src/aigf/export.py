@@ -3,10 +3,40 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from pathlib import Path
 
 from .context import build_context
 from .persona import get_persona_prompt, load_persona
+
+
+def _write_private_text(dest: Path, text: str) -> None:
+    """Atomically write an export while keeping private context owner-readable only."""
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=dest.parent,
+            prefix=f".{dest.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as f:
+            tmp_path = Path(f.name)
+            if os.name == "posix":
+                os.fchmod(f.fileno(), 0o600)
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, dest)
+        tmp_path = None
+        if os.name == "posix":
+            dest.chmod(0o600)
+    finally:
+        if tmp_path is not None and tmp_path.exists():
+            tmp_path.unlink()
 
 
 def export_plain(
@@ -18,8 +48,7 @@ def export_plain(
     """Plain system prompt text (same as context build)."""
     text = build_context(persona=persona, lang=lang, max_memories=max_memories)
     if dest is not None:
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(text, encoding="utf-8")
+        _write_private_text(dest, text)
     return text
 
 
@@ -53,8 +82,7 @@ def export_sillytavern(
         "character_version": "0.1.0",
         "extensions": {"aigf": {"source": "ai-girlfriend-kit", "persona": name}},
     }
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(json.dumps(card, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _write_private_text(dest, json.dumps(card, ensure_ascii=False, indent=2) + "\n")
     return dest
 
 
@@ -83,6 +111,5 @@ def export_openwebui(
             "lang": lang,
         },
     }
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _write_private_text(dest, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     return dest
